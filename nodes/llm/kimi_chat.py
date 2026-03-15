@@ -316,11 +316,29 @@ class KimiChat:
             elif "exceeded_current_quota" in error_msg:
                 raise RuntimeError("账户余额不足，请充值后重试。") from e
             elif "rate_limit" in error_msg or "429" in error_msg:
-                raise RuntimeError(
-                    "请求频率超限。\n"
-                    "建议：增加 request_delay_ms（如 2000ms）后重试。\n"
-                    "注意：OpenAI SDK 已内置重试，一次失败可能消耗多次 RPM 额度。"
-                ) from e
+                # Parse specific rate limit type from error message
+                if "TPD" in error_msg:
+                    raise RuntimeError(
+                        "已达到每日 Token 限额 (TPD)。\n"
+                        "今天的额度已用完，请明天再试或升级账户 tier。"
+                    ) from e
+                elif "TPM" in error_msg:
+                    raise RuntimeError(
+                        "已达到每分钟 Token 限额 (TPM)。\n"
+                        "请等待 1 分钟后重试，或增加 request_delay_ms。"
+                    ) from e
+                elif "RPM" in error_msg:
+                    raise RuntimeError(
+                        "已达到每分钟请求限额 (RPM)。\n"
+                        "请等待 1 分钟后重试，或增加 request_delay_ms。\n"
+                        "注意：OpenAI SDK 内置重试会放大请求次数。"
+                    ) from e
+                else:
+                    raise RuntimeError(
+                        "请求频率超限。\n"
+                        f"详情：{error_msg}\n"
+                        "建议：增加 request_delay_ms 或稍后重试。"
+                    ) from e
             elif "content_filter" in error_msg:
                 raise RuntimeError("内容审查拒绝，请修改输入内容。") from e
             else:
