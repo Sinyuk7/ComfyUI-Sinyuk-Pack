@@ -12,6 +12,7 @@ Supports:
 from __future__ import annotations
 
 import os
+import time
 from typing import ClassVar, TypedDict
 
 
@@ -183,6 +184,16 @@ class KimiChat:
                         "tooltip": "Top-p 核采样参数：\n• 控制从概率最高的 tokens 中采样的范围\n• 0.95 表示从累计概率 95% 的 tokens 中采样\n• 较低值使输出更集中，较高值增加多样性\n\n一般保持默认值 0.95 即可，通常调整 temperature 更直观。\n\n注意：kimi-k2.5 固定为 0.95",
                     },
                 ),
+                "request_delay_ms": (
+                    "INT",
+                    {
+                        "default": 0,
+                        "min": 0,
+                        "max": 60000,
+                        "step": 100,
+                        "tooltip": "请求前的延迟时间（毫秒）。\n\n批量任务时建议设置：\n• 500-1000ms：普通批量任务\n• 2000-3000ms：频繁调用时\n\n设为 0 表示不延迟。\n\n注意：OpenAI SDK 已内置重试机制，无需额外设置。",
+                    },
+                ),
             },
         }
 
@@ -197,6 +208,7 @@ class KimiChat:
         max_tokens: int = 4096,
         enable_thinking: bool = True,
         top_p: float = 0.95,
+        request_delay_ms: int = 0,
     ) -> float:
         """Always re-execute to get fresh responses."""
         return float("nan")
@@ -211,6 +223,7 @@ class KimiChat:
         max_tokens: int = 4096,
         enable_thinking: bool = True,
         top_p: float = 0.95,
+        request_delay_ms: int = 0,
     ) -> tuple[str, int, int, int]:
         """
         调用 Kimi API 并返回响应。
@@ -224,6 +237,7 @@ class KimiChat:
             max_tokens: 最大生成 token 数
             enable_thinking: 启用思考模式（仅 kimi-k2.5）
             top_p: Top-p 采样参数
+            request_delay_ms: 请求前延迟（毫秒）
 
         Returns:
             (回复文本, 输入tokens, 输出tokens, 总tokens)
@@ -286,7 +300,13 @@ class KimiChat:
         if extra_body:
             request_params["extra_body"] = extra_body
 
+        # Apply request delay if specified (helps avoid rate limiting in batch tasks)
+        if request_delay_ms > 0:
+            time.sleep(request_delay_ms / 1000.0)
+
         # Make the API call
+        # Note: OpenAI SDK has built-in retry mechanism (2 retries by default)
+        # We don't add extra retries to avoid multiplying requests
         try:
             completion = client.chat.completions.create(**request_params)  # type: ignore[arg-type]
         except Exception as e:
@@ -295,8 +315,12 @@ class KimiChat:
                 raise RuntimeError("API Key 无效，请检查是否正确。") from e
             elif "exceeded_current_quota" in error_msg:
                 raise RuntimeError("账户余额不足，请充值后重试。") from e
-            elif "rate_limit" in error_msg:
-                raise RuntimeError("请求频率超限，请稍后重试。") from e
+            elif "rate_limit" in error_msg or "429" in error_msg:
+                raise RuntimeError(
+                    "请求频率超限。\n"
+                    "建议：增加 request_delay_ms（如 2000ms）后重试。\n"
+                    "注意：OpenAI SDK 已内置重试，一次失败可能消耗多次 RPM 额度。"
+                ) from e
             elif "content_filter" in error_msg:
                 raise RuntimeError("内容审查拒绝，请修改输入内容。") from e
             else:
