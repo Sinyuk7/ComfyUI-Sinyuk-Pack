@@ -265,19 +265,26 @@ class KimiChat:
         }
 
         # Handle kimi-k2.5 specific parameters
+        # Use extra_body for Kimi-specific parameters that OpenAI SDK doesn't recognize
+        extra_body: dict[str, object] = {}
+
         if model == "kimi-k2.5":
             # kimi-k2.5 has fixed temperature and top_p values based on thinking mode
             if enable_thinking:
-                request_params["thinking"] = {"type": "enabled"}
+                extra_body["thinking"] = {"type": "enabled"}
                 # temperature is fixed at 1.0 for thinking mode
             else:
-                request_params["thinking"] = {"type": "disabled"}
+                extra_body["thinking"] = {"type": "disabled"}
                 # temperature is fixed at 0.6 for non-thinking mode
             # top_p is fixed at 0.95 for kimi-k2.5
         else:
             # Other models can customize temperature and top_p
             request_params["temperature"] = temperature
             request_params["top_p"] = top_p
+
+        # Add extra_body if there are Kimi-specific parameters
+        if extra_body:
+            request_params["extra_body"] = extra_body
 
         # Make the API call
         try:
