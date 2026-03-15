@@ -1,0 +1,108 @@
+---
+description: Python 代码规范 - 严格类型标注
+alwaysApply: true
+---
+
+# Python 代码规范
+
+## 类型标注要求
+
+本项目使用严格的类型标注，类似 TypeScript 的类型系统。所有代码必须通过 Pylance 的严格模式检查。
+
+### 1. 必须使用 `from __future__ import annotations`
+
+所有 Python 文件必须在开头添加：
+
+```python
+from __future__ import annotations
+```
+
+### 2. ComfyUI INPUT_TYPES 的正确类型声明
+
+ComfyUI 的 `INPUT_TYPES` 返回类型应该使用 `InputTypeDict`：
+
+```python
+from typing import TypedDict, NotRequired
+
+class InputTypeOptions(TypedDict, total=False):
+    """输入类型的配置选项"""
+    default: int | float | str | bool
+    min: int | float
+    max: int | float
+    step: int | float
+    display: str
+    multiline: bool
+    placeholder: str
+
+
+class InputTypeDict(TypedDict, total=False):
+    """INPUT_TYPES 返回值的类型"""
+    required: dict[str, tuple[str, InputTypeOptions] | tuple[str]]
+    optional: dict[str, tuple[str, InputTypeOptions] | tuple[str]]
+    hidden: dict[str, str]
+```
+
+### 3. 类方法和实例方法的类型标注
+
+```python
+@classmethod
+def INPUT_TYPES(cls) -> InputTypeDict:
+    ...
+
+def execute(self, image: torch.Tensor, value: float) -> tuple[torch.Tensor]:
+    ...
+```
+
+### 4. 类属性使用 ClassVar
+
+```python
+from typing import ClassVar
+
+class MyNode:
+    RETURN_TYPES: ClassVar[tuple[str, ...]] = ("IMAGE",)
+    RETURN_NAMES: ClassVar[tuple[str, ...]] = ("image",)
+    FUNCTION: ClassVar[str] = "execute"
+    CATEGORY: ClassVar[str] = "Sinyuk"
+```
+
+### 5. TYPE_CHECKING 中导入 torch
+
+避免运行时导入 torch（除非必要）：
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
+```
+
+### 6. 返回值类型必须明确
+
+❌ 错误：
+```python
+def execute(self, image, value):
+    return (result,)
+```
+
+✅ 正确：
+```python
+def execute(self, image: torch.Tensor, value: float) -> tuple[torch.Tensor]:
+    return (result,)
+```
+
+### 7. 可选参数使用 `| None`
+
+```python
+def execute(
+    self,
+    image: torch.Tensor,
+    mask: torch.Tensor | None = None,
+) -> tuple[torch.Tensor]:
+    ...
+```
+
+## 代码风格
+
+- 使用 `pathlib.Path` 而非 `os.path`
+- 字符串使用双引号 `"`
+- 类型标注中的字符串使用引号包裹（forward reference）：`"torch.Tensor"`

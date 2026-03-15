@@ -1,0 +1,6 @@
+# Core dependencies (usually already available in ComfyUI)
+# torch>=2.0.0
+# numpy>=1.21.0
+
+# Add your additional dependencies here
+# pillow>=9.0.0
