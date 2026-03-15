@@ -4,3 +4,6 @@
 
 # Add your additional dependencies here
 # pillow>=9.0.0
+
+# LLM API dependencies
+openai>=1.0
