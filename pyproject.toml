@@ -1,0 +1,16 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--ignore=__init__.py",
+]
+# Ignore the root __init__.py which has relative imports for ComfyUI
+collect_ignore = ["__init__.py"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"

@@ -7,3 +7,6 @@
 
 # LLM API dependencies
 openai>=1.0
+
+# Development dependencies
+pytest>=8.0.0
