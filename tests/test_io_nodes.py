@@ -5,7 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import torch
 
+from nodes.io.auto_tile_factors import AutoTileFactors
 from nodes.io.file_exists import FileExists
 from nodes.io.save_text import SaveText
 
@@ -215,3 +217,70 @@ class TestFileExists:
         assert "directory" in input_types["required"]
         assert "filename" in input_types["required"]
         assert "extension" in input_types["required"]
+
+
+class TestAutoTileFactors:
+    """Tests for AutoTileFactors node."""
+
+    @pytest.fixture
+    def node(self) -> AutoTileFactors:
+        """Create AutoTileFactors node instance."""
+        return AutoTileFactors()
+
+    def test_landscape_image_scales_height(
+        self, node: AutoTileFactors
+    ) -> None:
+        """Test landscape images prefer width splits."""
+        image = torch.zeros((1, 1080, 1920, 3))
+
+        result = node.execute(image, 3)
+
+        assert result == (3, 2)
+
+    def test_portrait_image_scales_width(
+        self, node: AutoTileFactors
+    ) -> None:
+        """Test portrait images prefer height splits."""
+        image = torch.zeros((1, 1920, 1080, 3))
+
+        result = node.execute(image, 3)
+
+        assert result == (2, 3)
+
+    def test_square_image_uses_max_chunks_on_both_sides(
+        self, node: AutoTileFactors
+    ) -> None:
+        """Test square images split evenly."""
+        image = torch.zeros((1, 1024, 1024, 3))
+
+        result = node.execute(image, 3)
+
+        assert result == (3, 3)
+
+    def test_extreme_aspect_ratio_clamps_short_side_to_one(
+        self, node: AutoTileFactors
+    ) -> None:
+        """Test very wide images keep the shorter side at least one tile."""
+        image = torch.zeros((1, 512, 4096, 3))
+
+        result = node.execute(image, 3)
+
+        assert result == (3, 1)
+
+    def test_custom_max_chunks_is_respected(
+        self, node: AutoTileFactors
+    ) -> None:
+        """Test custom maximum factor is not exceeded."""
+        image = torch.zeros((1, 900, 1600, 3))
+
+        result = node.execute(image, 5)
+
+        assert result == (5, 3)
+
+    def test_input_types_structure(self) -> None:
+        """Test INPUT_TYPES returns correct structure."""
+        input_types = AutoTileFactors.INPUT_TYPES()
+
+        assert "required" in input_types
+        assert "image" in input_types["required"]
+        assert "max_chunks" in input_types["required"]
