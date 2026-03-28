@@ -6,10 +6,10 @@ python_functions = ["test_*"]
 addopts = [
     "-v",
     "--tb=short",
-    "--ignore=__init__.py",
 ]
-# Ignore the root __init__.py which has relative imports for ComfyUI
-collect_ignore = ["__init__.py"]
+# 忽略根目录 __init__.py（包含 ComfyUI 特定的相对导入）
+# 通过条件导入，现在根目录 __init__.py 可以在两种环境下工作
+norecursedirs = [".git", "__pycache__", ".codemaker", "openspec"]
 
 [tool.pyright]
 pythonVersion = "3.11"

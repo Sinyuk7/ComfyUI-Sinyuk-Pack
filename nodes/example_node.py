@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from ..types import InputTypeDict, InputTypeOptions
+from ..comfy_types import InputTypeDict, InputTypeOptions
 
 if TYPE_CHECKING:
     import torch
