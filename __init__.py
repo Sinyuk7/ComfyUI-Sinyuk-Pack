@@ -18,6 +18,10 @@ try:
     from .nodes.io import NODE_DISPLAY_NAME_MAPPINGS as IO_NODE_DISPLAY_NAME_MAPPINGS
     from .nodes.llm import NODE_CLASS_MAPPINGS as LLM_NODE_CLASS_MAPPINGS
     from .nodes.llm import NODE_DISPLAY_NAME_MAPPINGS as LLM_NODE_DISPLAY_NAME_MAPPINGS
+    from .nodes.image import NODE_CLASS_MAPPINGS as IMAGE_NODE_CLASS_MAPPINGS
+    from .nodes.image import (
+        NODE_DISPLAY_NAME_MAPPINGS as IMAGE_NODE_DISPLAY_NAME_MAPPINGS,
+    )
 except ImportError:
     # 独立测试环境 - 绝对导入
     from nodes.strings import NODE_CLASS_MAPPINGS as STRINGS_NODE_CLASS_MAPPINGS
@@ -28,12 +32,17 @@ except ImportError:
     from nodes.io import NODE_DISPLAY_NAME_MAPPINGS as IO_NODE_DISPLAY_NAME_MAPPINGS
     from nodes.llm import NODE_CLASS_MAPPINGS as LLM_NODE_CLASS_MAPPINGS
     from nodes.llm import NODE_DISPLAY_NAME_MAPPINGS as LLM_NODE_DISPLAY_NAME_MAPPINGS
+    from nodes.image import NODE_CLASS_MAPPINGS as IMAGE_NODE_CLASS_MAPPINGS
+    from nodes.image import (
+        NODE_DISPLAY_NAME_MAPPINGS as IMAGE_NODE_DISPLAY_NAME_MAPPINGS,
+    )
 
 # Node class mappings - add your nodes here
 NODE_CLASS_MAPPINGS: dict[str, type] = {
     **STRINGS_NODE_CLASS_MAPPINGS,
     **IO_NODE_CLASS_MAPPINGS,
     **LLM_NODE_CLASS_MAPPINGS,
+    **IMAGE_NODE_CLASS_MAPPINGS,
 }
 
 # Display name mappings - human-readable names for the UI
@@ -41,6 +50,7 @@ NODE_DISPLAY_NAME_MAPPINGS: dict[str, str] = {
     **STRINGS_NODE_DISPLAY_NAME_MAPPINGS,
     **IO_NODE_DISPLAY_NAME_MAPPINGS,
     **LLM_NODE_DISPLAY_NAME_MAPPINGS,
+    **IMAGE_NODE_DISPLAY_NAME_MAPPINGS,
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
